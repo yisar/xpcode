@@ -3,86 +3,201 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TinyMDE demo</title>
-    <script src="./tinymde.js"></script>
-    <style>
-        @import url("//at.alicdn.com/t/font_1151392_5hwi3w2ygqu.css");
-
-        * {
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            background: #f2f2f2;
-        }
-
-        h1{
-            text-align: center;
-            padding: 30px;
-        }
-
-        .tinymde{
-            width: 800px;
-            min-height: 200px;
-            margin: 30px auto;
-        }
-
-        textarea {
-            width: 100%;
-            min-height: 200px;
-            outline: none;
-            border: none;
-            box-sizing: border-box;
-            padding: 10px 15px;
-            resize: none;
-            border-radius: 0 0 10px 10px;
-            font-size: 14px;
-            line-height: 20px;
-        }
-
-        section {
-            padding: 10px;
-            background: #fff;
-            border-bottom: 2px solid #f2f2f2;
-            border-radius: 10px 10px 0 0;
-        }
-
-        .te{
-            cursor: pointer;
-            margin: 7px;
-            padding: 7px;
-            font-size: 16px;
-            border-radius: 5px;
-        }
-
-        .te:hover{
-            background: #f2f2f2;
-        }
-    </style>
+    <title>xpcode demo</title>
 </head>
 
-<body>
-    <div class="tinymde">
-        <h1>TinyMDE Demo</h1>
-        <section>
-            <i class="te te-bold" onclick="md.bold()"></i>
-            <i class="te te-italic" onclick="md.italic()"></i>
-            <i class="te te-quote" onclick="md.quote()"></i>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+    }
 
-            <i class="te te-image" onclick="md.image()"></i>
-            <i class="te te-link" onclick="md.link()"></i>
-            <i class="te te-code" onclick="md.blockCode()"></i>
+    i{
+        cursor: pointer;
+        padding: 5px;
+        border-radius: 5px;
+        font-style: normal;
+        font-weight: bold;
+    }
+
+    i:hover{
+        background: #eee;
+    }
+
+    body {
+        background: #f2f2f2;
+    }
+
+    h1 {
+        text-align: center;
+        padding: 30px;
+    }
+
+    .xpcode {
+        width: 800px;
+        min-height: 200px;
+        margin: 30px auto;
+    }
+
+    textarea {
+        width: 100%;
+        min-height: 200px;
+        outline: none;
+        border: none;
+        box-sizing: border-box;
+        padding: 10px 15px;
+        resize: none;
+        border-radius: 0 0 10px 10px;
+        font-size: 14px;
+        line-height: 20px;
+    }
+
+    section {
+        padding: 10px;
+        background: #fff;
+        border-bottom: 2px solid #f2f2f2;
+        border-radius: 10px 10px 0 0;
+    }
+
+    pre {
+        white-space: break-spaces;
+        padding: 20px 0;
+    }
+</style>
+
+<body>
+    <script>
+
+        const addEvent = (el, name, handler) => {
+            el.addEventListener(name, handler)
+            return () => el.removeEventListener(name, handler)
+        }
+
+        const stringSplice = (str, start, end, insert = '') =>
+            str.slice(0, start) + insert + str.slice(end)
+
+        const wrapMarkup = (state, tag) => {
+            const { selectionStart: start, selectionEnd: end, value } = state
+            const content = value.slice(start, end) || '输入内容'
+            const markup = `[${tag}:${content}]`
+            state.value = stringSplice(value, start, end, markup)
+            state.selectionStart = state.selectionEnd = start + markup.length
+        }
+
+        const createLinkOrImage = (state, type, url = 'url', text = '') => {
+            const { selectionStart: start, selectionEnd: end, value } = state
+            // 优先使用选中文本作为内容
+            const content = value.slice(start, end) || text || '内容'
+            // 生成格式：[类型:url,文本:内容]
+            const markup = `[${type}:${url},文本:${content}]`
+            state.value = stringSplice(value, start, end, markup)
+            state.selectionStart = state.selectionEnd = start + markup.length
+        }
+
+        class XPCode {
+            constructor(el, rules) {
+                this.el = typeof el === 'string' ? document.querySelector(el) : el
+                this.rules = Object.entries(rules).map(([regex, replacement]) => ({
+                    regexp: new RegExp(regex, 'g'),
+                    replacement
+                }))
+                if (!(this.el instanceof HTMLTextAreaElement)) {
+                    throw new TypeError('必须传入 textarea 元素')
+                }
+            }
+
+            parse(text) {
+                return this.rules.reduce((result, { regexp, replacement }) =>
+                    result.replace(regexp, replacement), text)
+            }
+
+            // 加粗：[加粗:内容]
+            bold() {
+                wrapMarkup(this.el, '加粗')
+                this.el.focus()
+            }
+
+            // 标题：[标题:内容]
+            heading() {
+                wrapMarkup(this.el, '标题')
+                this.el.focus()
+            }
+
+            // 代码：[代码:内容]
+            code() {
+                wrapMarkup(this.el, '代码')
+                this.el.focus()
+            }
+
+            // 引用：[引用:内容]
+            quote() {
+                wrapMarkup(this.el, '引用')
+                this.el.focus()
+            }
+
+            // 图片：[图片:描述](url)
+            image(url, text) {
+                createLinkOrImage(this.el, '图片', url, text)
+                this.el.focus()
+            }
+
+            // 链接：[链接:文本](url)
+            link(url, text) {
+                createLinkOrImage(this.el, '链接', url, text)
+                this.el.focus()
+            }
+
+            // 艾特：[艾特:名称](url)
+            at(url, text) {
+                createLinkOrImage(this.el, '艾特', url, text)
+                this.el.focus()
+            }
+
+            // 话题：[话题:名称](url)
+            topic(url, text) {
+                createLinkOrImage(this.el, '话题', url, text)
+                this.el.focus()
+            }
+        }
+
+    </script>
+    <div class="xpcode">
+        <h1>XPCode Demo</h1>
+        <section>
+            <i onclick="xp.bold()">加粗</i>
+            <i onclick="xp.quote()">引用</i>
+            <i onclick="xp.image()">图片</i>
+            <i onclick="xp.link()">链接</i>
+            <i onclick="xp.code()">代码</i>
         </section>
-        <textarea spellcheck="false">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse at nibh felis. Nunc consequat diam et tellus tempor gravida. Donec hendrerit aliquet risus, ut tempor purus dictum sit amet. Integer sit amet lacus eget ipsum pulvinar interdum.
-      
-      Donec et nulla auctor massa pharetra adipiscing ut sit amet sem. Suspendisse molestie velit vitae mattis tincidunt. Ut sit amet quam mollis, vulputate turpis vel, sagittis felis. Vestibulum ornare ut eros vitae adipiscing.
-    </textarea>
+        <textarea
+            spellcheck="false">[标题:我是一个人]
+
+[加粗:你是一个狗]
+我们都能和谐相处
+[图片:https://dd-static.jd.com/ddimgp/jfs/t20260608/298409/22/2365/73693/68171acfFd4e5a67d/63d2961c8aaf95f4.png,文本:1]</textarea>
+        <pre class="output"></pre>
     </div>
     <script>
-        var md = new TinyMDE(document.querySelector('textarea'))
+        var xp = new XPCode(document.querySelector('textarea'), {
+            '\\[加粗\\:(.+?)\\]': '<strong>$1</strong>',
+            '\\[标题\\:(.+?)\\]': '<h2>$1</h2>',
+            '\\[代码\\:(.+?)\\]': '<pre>$1</pre>',
+            '\\[引用\\:(.+?)\\]': '<blockquote>$1</blockquote>',
+            '\\[图片\\:(.+?)(?:,文本\\:(.+?))?\\]': (match, url, text) =>
+                `<img src="${url}" alt="${text || ''}">`,
+            '\\[链接\\:(.+?)(?:,文本\\:(.+?))?\\]': (match, url, text) =>
+                `<a href="${url}">${text || url}</a>`,
+            '\n': '<br>'
+        })
+
+        document.querySelector('.output').textContent = xp.parse(document.querySelector('textarea').innerHTML)
+        document.querySelector('textarea').oninput = (e => {
+            const out = xp.parse(e.target.value)
+            console.log(out)
+            document.querySelector('.output').textContent = out
+        })
     </script>
 </body>
 
