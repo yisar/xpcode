@@ -1,7 +1,3 @@
-# clicliMDE
+### xpcode
 
-### Usage
-
-```js
-var md = new TinyMDE(document.querySelector('textarea'))
-```
+适用于 ixipi.net 的文本编辑器
