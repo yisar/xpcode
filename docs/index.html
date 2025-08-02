@@ -87,9 +87,7 @@
 
         const createLinkOrImage = (state, type, url = 'url', text = '') => {
             const { selectionStart: start, selectionEnd: end, value } = state
-            // 优先使用选中文本作为内容
             const content = value.slice(start, end) || text || '内容'
-            // 生成格式：[类型:url,文本:内容]
             const markup = `[${type}:${url},文本:${content}]`
             state.value = stringSplice(value, start, end, markup)
             state.selectionStart = state.selectionEnd = start + markup.length
@@ -172,10 +170,10 @@
             <i onclick="xp.code()">代码</i>
         </section>
         <textarea
-            spellcheck="false">[标题:我是一个人]
+            spellcheck="false">[标题:这是一个标题]
 
-[加粗:你是一个狗]
-我们都能和谐相处
+[加粗:这是一个加粗文本]
+这是一个正常文本
 [图片:https://dd-static.jd.com/ddimgp/jfs/t20260608/298409/22/2365/73693/68171acfFd4e5a67d/63d2961c8aaf95f4.png,文本:1]</textarea>
         <pre class="output"></pre>
     </div>
